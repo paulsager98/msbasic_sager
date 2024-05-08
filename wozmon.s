@@ -16,10 +16,22 @@ RESET:
                 CLD                     ; Clear decimal arithmetic mode.
                 JSR     INIT_BUFFER
                 CLI
-                LDA     #$1F            ; 8-N-1, 19200 bps
+                ;init of UART
+                LDA     #%10000011  ;set 8-N-1 and divisor latch active
                 STA     ACIA_CTRL
-                LDY     #$89            ; No parity, no echo, rx interrupts.
-                STY     ACIA_CMD
+                ;set BAUD Rate 19200 with 1.8432MHz Osz. and Divisor 6
+                LDA     #%00000110  ;load 6 in LSB
+                STA     ACIA_DATA   ;$5000
+                LDA     #%00000000  ;load 0 in MSB
+                STA     ACIA_BAUD   ;$5001
+                LDA     #%00000011  ;set 8-N-1 and divisor latch inactive
+                STA     ACIA_CTRL
+                LDA     #%00000001  ;enable recv data itrpt
+                STA     ACIA_BAUD
+                LDA     #%00000000  ;disable FIFO
+                STA     ACIA_FIFO
+                LDA     #%00000000  ;disable Modem Control
+                STA     ACIA_MCTRL
 
 NOTCR:
                 CMP     #$08            ; Backspace key?
@@ -180,9 +192,10 @@ PRHEX:
 ECHO:
                 STA     ACIA_DATA       ; Output character.
                 PHA                     ; Save A.
-                LDA     #$FF            ; Initialize delay loop.
-TXDELAY:        DEC                     ; Decrement A.
-                BNE     TXDELAY         ; Until A gets to 0.
+
+TXDELAY:        LDA     ACIA_STATUS     ; Initialize delay loop.
+                AND     #$20
+                BEQ     TXDELAY
                 PLA                     ; Restore A.
                 RTS                     ; Return.
 

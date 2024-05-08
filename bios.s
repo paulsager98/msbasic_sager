@@ -11,10 +11,12 @@ INPUT_BUFFER:   .res $100
 
 .segment "BIOS"
 
-ACIA_DATA       = $5000
-ACIA_STATUS     = $5001
-ACIA_CMD        = $5002
+ACIA_DATA       = $5000                    ; If ACIA_CTRL Bit 7 is low, RW Data, if ACIA_CTRL Bit 7 is high, First 8 Bits for baud
+ACIA_BAUD       = $5001                    ; If ACIA_CTRL Bit 7 is low, Interrupt Register, if ACIA_CTRL Bit 7 is high, Last 8 Bits for baud
+ACIA_FIFO       = $5002                    ; FIFO Control Register / ITRPT IDENT
 ACIA_CTRL       = $5003
+ACIA_MCTRL	    = $5004
+ACIA_STATUS     = $5005
 
 LOAD:
                 rts
@@ -51,9 +53,10 @@ MONCOUT:
 CHROUT:
                 pha
                 sta     ACIA_DATA
-                lda     #$FF
-@txdelay:       dec
-                bne     @txdelay
+
+@txdelay:       lda     ACIA_STATUS
+                and     #$20
+                beq     @txdelay
                 pla
                 rts
 
@@ -93,7 +96,6 @@ BUFFER_SIZE:
 IRQ_HANDLER:
                 pha
                 phx
-                lda     ACIA_STATUS
                 ; For now, assume the only source of interrupts is incoming data
                 lda     ACIA_DATA
                 jsr     WRITE_BUFFER
