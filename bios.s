@@ -51,11 +51,11 @@ CHRIN:
 ; Modifies: flags
 MONCOUT:
 CHROUT:
-                pha
                 sta     ACIA_DATA
+                pha
 
 @txdelay:       lda     ACIA_STATUS
-                and     #$20
+                and     #%00100000
                 beq     @txdelay
                 pla
                 rts

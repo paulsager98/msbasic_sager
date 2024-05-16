@@ -194,7 +194,7 @@ ECHO:
                 PHA                     ; Save A.
 
 TXDELAY:        LDA     ACIA_STATUS     ; Initialize delay loop.
-                AND     #$20
+                AND     #%00100000
                 BEQ     TXDELAY
                 PLA                     ; Restore A.
                 RTS                     ; Return.
